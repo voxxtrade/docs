@@ -81,6 +81,29 @@ During a call, the UI provides real-time telemetry so users know the agent is ac
   </Card>
 </CardGrid>
 
+---
+
+## Dynamic AI Reasoning & Multi-LLM Support
+
+VoxTrade agents are not bound to static scripted dialog. The negotiation brain dynamically reasons through commercial concessions, price bounds, and settlement terms in real time.
+
+```
+┌────────────────────────────────────────────────────────┐
+│             Negotiation Intelligence Layer             │
+├───────────────────────────┬────────────────────────────┤
+│   Built-in Dynamic Core   │     Frontier LLM Brains    │
+│   • Semantic price parser │     • Google Gemini 1.5    │
+│   • Concession engine     │     • Groq Llama 3.1 8B    │
+│   • Preimage hashlock     │     • OpenAI GPT-4o-mini   │
+│     derivation            │     • Direct API streaming │
+└───────────────────────────┴────────────────────────────┘
+```
+
+### Bring-Your-Own-Key (BYOK) Architecture
+- **Zero-Storage Privacy**: Custom API keys (Gemini, Groq, OpenAI) are kept exclusively within client-side `localStorage`. They are never stored in any database or centralized backend.
+- **Autonomous Fallback**: If no custom API key is supplied and no server environment variables are set, VoxTrade falls back to its built-in dynamic bargaining state machine, adjusting pricing dynamically per round and enforcing HTLC constraints.
+- **Structured Term Extraction**: Every model output tags structured metadata (`PROPOSAL`, `COUNTER_OFFER`, `AGREEMENT`, `TERMS`) and numerical amounts, allowing the contract engine to draft Soroban parameters automatically.
+
 <Aside type="note" title="Transcript Auditability">
 Every word spoken during the negotiation is timestamped and indexed in the final transcript. Once the call ends, either party can download the entire session as a `.json` file for compliance or dispute resolution.
 </Aside>
