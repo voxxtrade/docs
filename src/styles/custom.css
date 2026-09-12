@@ -1,7 +1,16 @@
-:root {
+/* VoxTrade Documentation Custom Theme */
+
+/* ==========================================================================
+   Dark Theme (Default)
+   ========================================================================== */
+:root,
+:root[data-theme='dark'] {
+	/* Accents: Vibrant emerald and cyan */
 	--sl-color-accent-low: #064e3b;
 	--sl-color-accent: #10b981;
 	--sl-color-accent-high: #a7f3d0;
+
+	/* Text & Grayscale (Inverted for Dark Mode) */
 	--sl-color-white: #f8fafc;
 	--sl-color-gray-1: #e2e8f0;
 	--sl-color-gray-2: #94a3b8;
@@ -12,24 +21,59 @@
 	--sl-color-black: #080c14;
 }
 
+/* ==========================================================================
+   Light Theme
+   ========================================================================== */
 :root[data-theme='light'] {
+	/* Accents: Deep emerald and bright teal */
 	--sl-color-accent-low: #d1fae5;
 	--sl-color-accent: #059669;
 	--sl-color-accent-high: #064e3b;
+
+	/* Text & Grayscale (Inverted for Light Mode) */
+	--sl-color-white: #090d16;
+	--sl-color-gray-1: #1e293b;
+	--sl-color-gray-2: #334155;
+	--sl-color-gray-3: #64748b;
+	--sl-color-gray-4: #94a3b8;
+	--sl-color-gray-5: #e2e8f0;
+	--sl-color-gray-6: #f8fafc;
+	--sl-color-gray-7: #ffffff;
+	--sl-color-black: #ffffff;
 }
 
-/* Custom glow on hero and cards */
+/* ==========================================================================
+   Card Styling (Dark & Light)
+   ========================================================================== */
 .card {
-	border-color: rgba(16, 185, 129, 0.15) !important;
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.card:hover {
-	border-color: rgba(16, 185, 129, 0.4) !important;
-	box-shadow: 0 4px 20px -4px rgba(16, 185, 129, 0.12);
+:root,
+:root[data-theme='dark'] .card {
+	border-color: rgba(16, 185, 129, 0.2) !important;
+	background-color: #0d131f !important;
 }
 
-/* Stellar callout badge */
+:root[data-theme='dark'] .card:hover {
+	border-color: rgba(16, 185, 129, 0.5) !important;
+	box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.15);
+}
+
+:root[data-theme='light'] .card {
+	border: 1px solid #e2e8f0 !important;
+	background-color: #ffffff !important;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .card:hover {
+	border-color: rgba(5, 150, 105, 0.4) !important;
+	box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.12);
+}
+
+/* ==========================================================================
+   Badges & Interactive Components
+   ========================================================================== */
 .stellar-badge {
 	display: inline-flex;
 	align-items: center;
@@ -37,7 +81,29 @@
 	border-radius: 9999px;
 	font-size: 0.75rem;
 	font-weight: 600;
+	transition: all 0.2s ease;
+}
+
+:root,
+:root[data-theme='dark'] .stellar-badge {
 	background: rgba(6, 182, 212, 0.12);
 	color: #06b6d4;
 	border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+:root[data-theme='light'] .stellar-badge {
+	background: #ecfeff;
+	color: #0e7490;
+	border: 1px solid #a5f3fc;
+}
+
+/* Ensure clean light mode sidebar and navbar */
+:root[data-theme='light'] header.header {
+	background-color: rgba(255, 255, 255, 0.92) !important;
+	border-bottom: 1px solid #e2e8f0 !important;
+}
+
+:root[data-theme='light'] nav.sidebar {
+	background-color: #f8fafc !important;
+	border-right: 1px solid #e2e8f0 !important;
 }
