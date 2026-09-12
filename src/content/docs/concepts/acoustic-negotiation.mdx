@@ -1,0 +1,86 @@
+---
+title: Acoustic Rate Negotiation
+description: How VoxTrade translates natural spoken audio into real-time dynamic pricing and cryptographic commitments.
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+When people negotiate over voice, they don't just state prices; they convey confidence, urgency, and constraints through pacing, volume, and phrasing.
+
+Traditional checkout experiences flatten this rich communication into static buttons. **Acoustic Rate Negotiation** in VoxTrade is the process through which streaming audio is continuously evaluated to reach commercial consensus.
+
+---
+
+## The 5-Phase Negotiation Lifecycle
+
+Acoustic negotiation follows five structured phases:
+
+```
+[ Phase 1: Stream & Visualizer ] ──> [ Phase 2: Intent Parsing ]
+                                               │
+[ Phase 4: Agreement Consensus ] <── [ Phase 3: Dynamic Quoting ]
+              │
+              ▼
+[ Phase 5: Soroban Escrow Lock ]
+```
+
+<Steps>
+
+1. **Phase 1: Real-Time Audio Capture & Visualizer**
+   Audio is captured through the browser's `navigator.mediaDevices.getUserMedia()` at 16kHz or 48kHz mono. The `Web Audio API` (`AnalyserNode`) computes frequency FFT data, powering real-time waveforms on the user interface.
+
+2. **Phase 2: Live AI Transcription & Intent Extraction**
+   Speech is chunked into 250ms audio frames and passed to a real-time streaming speech-to-text model. The transcribed text is analyzed by an LLM prompt engine trained on commercial trade protocols. The engine identifies:
+   - Deliverables requested (e.g., "30-minute machine learning review").
+   - Proposed budget or rate ("I can pay up to 100 XLM").
+   - Timeline constraints ("Needs to be delivered by tomorrow afternoon").
+
+3. **Phase 3: Dynamic Price Discovery (Voice-to-Quote)**
+   The agent consults its internal pricing matrix (or counterparty constraints). It responds verbally:
+   > *"I can do the ML architecture review for 80 XLM, provided you share the repository link upfront."*
+
+4. **Phase 4: Agreement Consensus & Digest Generation**
+   Once both parties indicate assent ("Deal", "Agreed", "Confirmed"), the session enters the consensus state. The engine compiles a structured agreement:
+   - Buyer address
+   - Seller address
+   - Total payment amount (in XLM or Stellar USDC)
+   - Expiration ledger height (timeout)
+   - Hash of the agreed transcript
+
+5. **Phase 5: Soroban Escrow Initialization**
+   The buyer locks the agreed payment into the `X402Escrow` smart contract on Stellar. The audio session continues to fulfillment, with payments released against cryptographic preimages or upon verified delivery.
+
+</Steps>
+
+---
+
+## Audio Telemetry & Live Feedback
+
+During a call, the UI provides real-time telemetry so users know the agent is actively listening:
+
+- **Mic Activity Indicator**: Dynamic pulse responding to microphone input level (0 to 100 dB).
+- **Frequency Spectrum Bars**: An animated 24-band visualizer reflecting audio energy across low, mid, and high frequencies.
+- **Transcript Stream**: Real-time word-by-word streaming transcript showing what was understood by both parties.
+- **Status Indicator**: Live session state (`IDLE` → `CONNECTING` → `NEGOTIATING` → `AGREED` → `ESCROW_LOCKED` → `SETTLED`).
+
+---
+
+## Handling Bargaining and Edge Cases
+
+<CardGrid>
+  <Card title="Counter-Offers" icon="bars">
+    The AI agent is not programmed with a single rigid price. Merchants can set a *Target Price*, *Floor Price*, and *Step Increment*. If a user negotiates, the agent can concede up to the floor price in exchange for volume or flexible deadlines.
+  </Card>
+
+  <Card title="Speech Ambiguity" icon="warning">
+    If audio drops or a user mumbles, the AI asks clarifying questions before generating a contract: *"Did you say 50 XLM or 150 XLM?"*
+  </Card>
+
+  <Card title="Timeout & Abandonment" icon="close">
+    If either party hangs up mid-negotiation, no funds are locked. If a call drops *after* an escrow is locked, the on-chain timeout automatically permits the funder to reclaim their deposit.
+  </Card>
+</CardGrid>
+
+<Aside type="note" title="Transcript Auditability">
+Every word spoken during the negotiation is timestamped and indexed in the final transcript. Once the call ends, either party can download the entire session as a `.json` file for compliance or dispute resolution.
+</Aside>

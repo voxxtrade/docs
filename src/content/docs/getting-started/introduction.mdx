@@ -1,0 +1,69 @@
+---
+title: Introduction & Vision
+description: Welcome to VoxTrade — bridging spoken human voice, AI reasoning, and Stellar Soroban smart contracts.
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is VoxTrade?
+
+At its simplest, **VoxTrade is an open-source protocol that allows people and autonomous AI agents to negotiate, finalize, and pay for services using natural spoken voice on the Stellar network.**
+
+Think about how business was conducted for centuries: two people talking across a table, agreeing on a price, shaking hands, and settling the transaction. Today, online commerce is dominated by silent shopping carts, rigid credit card forms, and slow settlement layers that take 3% cuts.
+
+VoxTrade brings the nuance of human conversation back to modern commerce — but supercharges it with:
+1. **Autonomous AI Agents** that can negotiate terms, inventory, and pricing in real time.
+2. **Cryptographic Escrows** that guarantee you only pay for what was actually delivered.
+3. **Sub-Cent Settlement on Stellar** that makes per-second or per-milestone payments feasible without drowning in network fees.
+
+---
+
+## The Core Problem VoxTrade Solves
+
+<CardGrid>
+  <Card title="The Rigid Checkout Problem" icon="close">
+    Traditional web checkout can't handle dynamic bargaining, consultation fees, or custom-tailored quotes without custom backends and tedious forms.
+  </Card>
+  <Card title="The AI Payment Trust Problem" icon="warning">
+    If an AI agent can talk to customers or negotiate with supplier bots, how do you give it a payment card without risking it draining your bank account?
+  </Card>
+  <Card title="The Streaming Value Problem" icon="laptop">
+    If an AI is consulting with you over voice, how do you pay for 3 minutes and 42 seconds of audio advice fairly without either party getting cheated?
+  </Card>
+</CardGrid>
+
+---
+
+## How VoxTrade Fixes It
+
+VoxTrade solves these problems with a unified tripartite architecture:
+
+1. **Acoustic Voice Negotiation**:
+   Users and AI agents speak naturally over high-clarity WebRTC audio streams. Real-time audio visualizers display speech energy, while an intelligent agent understands nuance, asks clarifying questions, and proposes commercial terms.
+
+2. **Autonomous AI Agreement Synthesis**:
+   When negotiation concludes, an AI synthesis engine automatically digests the entire audio conversation, extracts agreed-upon deliverables, price, and deadlines, and outputs both:
+   - A human-readable legal contract draft.
+   - A cryptographic digest used to initialize an on-chain escrow on Stellar.
+
+3. **HTTP 402 & HTLC Soroban Escrows**:
+   Payment is locked in a Soroban smart contract (`X402Escrow`). As speech or services are streamed, micro-payments are unlocked using cryptographic SHA-256 preimages. If either party drops out, the funds automatically refund after a set number of Stellar ledgers.
+
+4. **Guarded Agent Treasuries**:
+   Instead of giving AI agents unrestricted private keys, merchants fund an `AgentTreasury` contract on Soroban. The agent is strictly constrained by rolling 24-hour spending caps (`current_ledger / 17280`). The human merchant retains ultimate authority to revoke, pause, or reclaim funds at any second.
+
+---
+
+## The VoxTrade Repositories
+
+The VoxTrade ecosystem is open-source and modular:
+
+| Repository | Description | Key Technologies |
+| :--- | :--- | :--- |
+| [**`voxtrade-app`**](https://github.com/voxxtrade/voxtrade-app) | Interactive web testbench, voice telemetry, WebRTC, AI synthesis engine, and TypeScript SDK. | Next.js 14, Tailwind CSS, Web Audio API, Lucide, `@stellar/stellar-sdk` |
+| [**`voxtrade-contract`**](https://github.com/voxxtrade/voxtrade-contract) | Production-grade Soroban smart contracts and Python agent runtime. | Rust, Soroban SDK, Python 3.10+, Stellar Testnet |
+| [**`docs`**](https://github.com/voxxtrade/docs) | Official protocol documentation, guides, API specs, and architecture references. | Astro Starlight, TypeScript, Markdown |
+
+<Aside type="tip" title="Ready to jump in?">
+Head over to the [Quickstart Guide](/docs/getting-started/quickstart/) to run the entire VoxTrade suite locally in under 5 minutes.
+</Aside>

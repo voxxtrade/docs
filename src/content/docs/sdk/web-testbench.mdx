@@ -1,0 +1,71 @@
+---
+title: Web Testbench & Audio Telemetry
+description: Understanding the interactive WebRTC voice room, real-time audio visualizers, and contract generator in voxtrade-app.
+---
+
+import { Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
+
+The **`voxtrade-app`** web application (built on Next.js 14, Tailwind CSS, and Lucide icons) serves as the reference implementation and visual testbench for the VoxTrade protocol.
+
+---
+
+## Testbench Architecture
+
+Located at `/app`, the testbench interface is divided into three key panels:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          VOXTRADE TESTBENCH                            │
+├────────────────────────────┬─────────────────────────────┬─────────────┤
+│ 1. AUDIO & TELEMETRY       │ 2. LIVE TRANSCRIPT          │ 3. CONTRACT │
+│ - Mic Toggle               │ - Word-by-word streaming    │ - Generated │
+│ - Frequency Visualizer     │ - Speaker identification    │   Terms     │
+│ - Mode Selector            │ - Timestamp indexing        │ - Escrow    │
+│   (User/Agent/Agent-Agent) │ - [Download Transcript]     │   Status    │
+└────────────────────────────┴─────────────────────────────┴─────────────┘
+```
+
+---
+
+## Real-Time Audio Telemetry Pipeline
+
+The browser connects to your physical microphone using the `Web Audio API`:
+
+1. **Audio Context**: Initializes `AudioContext` with `sampleRate: 44100` or `48000`.
+2. **Analyser Node**: An `AnalyserNode` with `fftSize: 64` produces 32 distinct frequency bins.
+3. **Smooth Energy Tracking**: The app applies an exponential decay smoothing function:
+   `energy[i] = alpha * prev[i] + (1 - alpha) * raw[i]`
+4. **Visualizer Rendering**: The frequency values are rendered via reactive Tailwind/SVG bars, animating fluidly at 60 FPS in response to vocal inflection.
+
+---
+
+## Voice Calling Controls
+
+- **Microphone Toggle**: Requests browser `getUserMedia` permissions with automatic echo cancellation and noise suppression.
+- **Mode Selector**: Instantly switch between:
+  - **User ↔ Agent**: Speak directly with the merchant AI.
+  - **Agent ↔ Agent**: Simulate autonomous bot-to-bot acoustic rate discovery.
+  - **User ↔ User**: Multi-party conversation with live AI agreement drafting.
+- **Simulate Conversation**: For testing environments without a microphone or in headless CI, click **"Simulate Conversation"** to play a synthetic multi-turn audio exchange through the pipeline.
+
+---
+
+## Transcript Logging & AI Scribe
+
+Every utterance during a session is assigned:
+- A unique turn ID.
+- Speaker role (`Buyer`, `Seller`, `AI Agent`).
+- Call duration timestamp (`MM:SS`).
+- Semantic tag (`Inquiry`, `Offer`, `Counter-Offer`, `Acceptance`).
+
+### Export Formats
+At the bottom of the transcript pane, the **"Download Transcript (.json)"** button generates a complete JSON bundle with full cryptographic metadata, ready for client archiving or legal compliance.
+
+<Aside type="tip" title="Run It Locally">
+Launch the testbench right on your machine:
+```bash
+cd voxtrade-app
+pnpm dev
+# Open http://localhost:3000/app
+```
+</Aside>

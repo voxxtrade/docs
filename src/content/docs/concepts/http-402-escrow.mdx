@@ -1,0 +1,117 @@
+---
+title: HTTP 402 & HTLC Escrow
+description: The cryptographic mechanism behind VoxTrade's audio streaming micropayments and on-chain escrow locks.
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+When the World Wide Web consortium created HTTP in the 1990s, they reserved status code **`402 Payment Required`** for digital cash. For decades, browsers displayed error messages because no internet-native settlement layer existed.
+
+VoxTrade revives the HTTP 402 standard for real-time voice streaming using **Stellar Soroban smart contracts** and **Hashed Time-Lock Contracts (HTLC)**.
+
+---
+
+## The Streaming Payment Problem
+
+Consider an AI model providing real-time voice translation or financial consultation:
+- If the customer pays upfront for 1 hour, what happens if the connection drops after 2 minutes?
+- If the service provider streams 1 hour of audio and bills at the end, what stops the customer from disconnecting without paying?
+
+**Solution**: Chop the voice stream into 5-second or 15-second audio chunks. Deliver each chunk only when the payment for that micro-chunk is cryptographically proven.
+
+---
+
+## The 402 Handshake Protocol
+
+Here is the exact cryptographic sequence used between the client and the voice agent:
+
+```
+Client (User)                                        Agent (Server)
+      │                                                     │
+      │ 1. Request Voice Stream (GET /v1/stream)            │
+      ├────────────────────────────────────────────────────>│
+      │                                                     │
+      │ 2. HTTP 402 Payment Required                        │
+      │    WWW-Authenticate: X402                           │
+      │    escrow_id=42, hashlock=0x7f83b1...               │
+      │    rate=5000000 stroops, timeout_ledger=105400      │
+      │<────────────────────────────────────────────────────┤
+      │                                                     │
+      │ 3. Lock Funds in Soroban Escrow                     │
+      │    X402Escrow::create_escrow(id=42, hashlock, ...)  │
+      │───[ Stellar Network ]                               │
+      │                                                     │
+      │ 4. Request with Escrow Proof                        │
+      │    Authorization: X402 escrow_id=42, tx=0x9a8f...   │
+      ├────────────────────────────────────────────────────>│
+      │                                                     │
+      │ 5. Verify On-Chain & Stream Audio Chunk             │
+      │    Audio Payload + Preimage R for previous chunk    │
+      │<────────────────────────────────────────────────────┤
+      │                                                     │
+      │ 6. Claim On-Chain with Preimage                     │
+      │    X402Escrow::claim(id=42, preimage=R)             │
+      │                                    [ Stellar Net ]──┘
+```
+
+---
+
+## Cryptographic Hashlocks Explained Simply
+
+At the core of an HTLC is a mathematical one-way function:
+```
+Hashlock H = SHA-256(Preimage R)
+```
+
+1. **The Seller picks a secret number** `R` (the *preimage*, e.g., 32 random bytes).
+2. **The Seller computes the hash** `H = SHA-256(R)` and shares only `H` with the Buyer.
+3. **The Buyer locks funds on Stellar**, writing the rule:
+   > *"Anyone who presents the secret `R` such that `SHA-256(R) == H` can withdraw this money. But if nobody presents `R` before ledger `L`, refund the money back to me."*
+4. **The Seller delivers the voice audio** along with the secret `R`.
+5. **The Seller submits `R` to the smart contract** and receives the payment immediately.
+
+Neither party can cheat:
+- The buyer cannot withdraw early because the contract locks funds until ledger $L$.
+- The seller cannot steal money without revealing $R$ (which proves delivery to the buyer).
+- If the seller disappears, the buyer waits until ledger $L$ and calls `refund()` to get 100% of their money back.
+
+---
+
+## Soroban Smart Contract Implementation
+
+Here is how the hashlock verification is implemented in Rust on Soroban:
+
+```rust
+// contracts/x402_escrow/src/lib.rs
+pub fn claim(env: Env, claimer: Address, escrow_id: u64, preimage: Bytes) {
+    claimer.require_auth();
+
+    let escrow = Self::get_escrow(&env, escrow_id);
+    assert_eq!(escrow.status, EscrowStatus::Active);
+
+    // Compute SHA-256 of provided preimage
+    let computed_hash = env.crypto().sha256(&preimage);
+
+    // Verify cryptographic match
+    if computed_hash != escrow.hashlock {
+        panic_with_error!(&env, EscrowError::InvalidPreimage);
+    }
+
+    // Transfer locked funds from contract to recipient
+    let token_client = token::Client::new(&env, &escrow.token);
+    token_client.transfer(
+        &env.current_contract_address(),
+        &escrow.recipient,
+        &escrow.amount,
+    );
+}
+```
+
+---
+
+## Why This Matters for AI Commerce
+
+Because Soroban executes this verification in milliseconds with sub-cent gas fees:
+- AI agents can stream high-value intelligence, legal advice, or live translation per second.
+- Users never take the risk of paying in advance for AI hallucinations or broken connections.
+- Settlement is 100% peer-to-peer and verifiable on the public Stellar ledger.

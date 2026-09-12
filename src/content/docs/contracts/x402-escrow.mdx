@@ -1,0 +1,134 @@
+---
+title: X402 Escrow Contract
+description: Reference for the X402Escrow smart contract implementing cryptographic HTLC escrow locks on Stellar.
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+
+The **`X402Escrow`** contract is the settlement engine for streaming audio and voice agreements. It implements a trustless **Hashed Time-Lock Contract (HTLC)** mechanism on Soroban.
+
+---
+
+## Escrow Lifecycle State Machine
+
+```
+              ┌───────────────────────────┐
+              │          Active           │
+              │  (Funds locked in escrow) │
+              └─────┬───────────────┬─────┘
+                    │               │
+  Valid Preimage R  │               │ Ledger Timeout reached
+   revealed before  │               │ (ledger >= timeout)
+        timeout     │               │
+                    ▼               ▼
+        ┌───────────────┐       ┌───────────────┐
+        │    Claimed    │       │   Refunded    │
+        │ (Paid to Rec) │       │ (Returned)    │
+        └───────────────┘       └───────────────┘
+```
+
+---
+
+## Contract Methods Reference
+
+### `create_escrow`
+Locks tokens from the depositor into a new escrow identifier.
+
+```rust
+pub fn create_escrow(
+    env: Env,
+    depositor: Address,
+    recipient: Address,
+    token: Address,
+    amount: i128,
+    hashlock: BytesN<32>,
+    timeout_ledger: u32,
+) -> u64
+```
+
+- `depositor`: Party funding the escrow (*requires `depositor.require_auth()`*).
+- `recipient`: Party eligible to claim funds upon revealing preimage $R$.
+- `token`: Stellar asset address.
+- `amount`: Token amount locked.
+- `hashlock`: `SHA-256(R)` 32-byte digest.
+- `timeout_ledger`: Stellar ledger sequence after which depositor can refund. Must be strictly in the future.
+- **Returns**: Unique `escrow_id` (`u64`).
+
+---
+
+### `claim`
+Releases the locked tokens to the `recipient` upon providing the secret preimage.
+
+```rust
+pub fn claim(
+    env: Env,
+    claimer: Address,
+    escrow_id: u64,
+    preimage: Bytes,
+)
+```
+
+- `claimer`: Must be the designated `recipient` (*requires `claimer.require_auth()`*).
+- `escrow_id`: Identifier of the active escrow.
+- `preimage`: Secret byte sequence $R$.
+- **Verification**: Verifies `env.crypto().sha256(&preimage) == escrow.hashlock`.
+- **Action**: Transfers full `amount` to `recipient`, sets status to `Claimed`.
+
+---
+
+### `refund`
+Returns 100% of the locked tokens back to the `depositor` if the deadline has passed.
+
+```rust
+pub fn refund(
+    env: Env,
+    refunder: Address,
+    escrow_id: u64,
+)
+```
+
+- `refunder`: Must be the original `depositor` (*requires `refunder.require_auth()`*).
+- `escrow_id`: Identifier of the active escrow.
+- **Verification**: Verifies `env.ledger().sequence() >= escrow.timeout_ledger`.
+- **Action**: Transfers full `amount` back to `depositor`, sets status to `Refunded`.
+
+---
+
+### `get_escrow`
+Read-only query returning the full state of an escrow.
+
+```rust
+pub fn get_escrow(env: Env, escrow_id: u64) -> EscrowRecord
+```
+
+Returns an `EscrowRecord` struct:
+```rust
+pub struct EscrowRecord {
+    pub depositor: Address,
+    pub recipient: Address,
+    pub token: Address,
+    pub amount: i128,
+    pub hashlock: BytesN<32>,
+    pub timeout_ledger: u32,
+    pub status: EscrowStatus, // Active (0), Claimed (1), Refunded (2)
+}
+```
+
+---
+
+## Error Codes (`EscrowError`)
+
+| Error Code | Name | Description |
+| :---: | :--- | :--- |
+| `1` | `EscrowNotFound` | The requested `escrow_id` does not exist in storage. |
+| `2` | `EscrowNotActive` | The escrow is already `Claimed` or `Refunded`. |
+| `3` | `InvalidPreimage` | The SHA-256 hash of the provided preimage does not match `hashlock`. |
+| `4` | `TimeoutNotReached` | Attempted to call `refund()` before `timeout_ledger`. |
+| `5` | `TimeoutExpired` | Attempted to call `claim()` after the escrow has already expired. |
+| `6` | `Unauthorized` | Caller is not authorized to claim or refund this escrow. |
+| `7` | `InvalidAmount` | Escrow amount must be strictly positive (greater than 0). |
+| `8` | `InvalidTimeout` | The specified `timeout_ledger` is not in the future. |
+
+<Aside type="note" title="Storage Rent Management">
+Completed escrows (`Claimed` or `Refunded`) can have their state archived after a grace period, preventing redundant state bloat on the Stellar ledger.
+</Aside>

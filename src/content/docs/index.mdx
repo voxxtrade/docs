@@ -1,0 +1,52 @@
+---
+title: VoxTrade Protocol
+description: The Voice-to-Voice AI Commerce Protocol on Stellar Soroban.
+template: splash
+hero:
+  tagline: Spoken conversation meets cryptographic settlement. Negotiate real-world terms over voice with sub-cent micro-escrows on Stellar.
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: Read the Guide
+      link: /docs/getting-started/introduction/
+      icon: right-arrow
+      variant: primary
+    - text: Live Smart Contracts
+      link: /docs/reference/deployments/
+      icon: external
+      variant: secondary
+    - text: View on GitHub
+      link: https://github.com/voxxtrade
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why VoxTrade?
+
+<CardGrid stagger>
+  <Card title="Voice-to-Voice Commerce" icon="microphone">
+    Conduct real-time business over spoken audio. From autonomous agent merchants to human counterparties, VoxTrade turns voice dialogue into legally structured smart contracts.
+  </Card>
+
+  <Card title="Powered by Stellar Soroban" icon="rocket">
+    Built on Stellar's high-speed, sub-cent settlement engine. Pay per second of streaming audio or per milestone with guaranteed 3-5 second finality and fees under $0.00001.
+  </Card>
+
+  <Card title="Three Dynamic Calling Modes" icon="random">
+    Choose between **User ↔ Agent** (customer service & ordering), **Agent ↔ Agent** (automated liquidity & rate discovery), or **User ↔ User** (P2P deals with automated AI escrow generation).
+  </Card>
+
+  <Card title="HTTP 402 Micropayments" icon="shield">
+    Native implementation of the HTTP 402 *Payment Required* standard. Streaming audio chunks are cryptographically locked using SHA-256 preimages and unlocked upon micro-settlement.
+  </Card>
+
+  <Card title="Rolling 24-Hour Limits" icon="setting">
+    Eliminate runaway AI agent risks. The `AgentTreasury` Soroban contract enforces immutable rolling daily spending caps and strict merchant admin revocation.
+  </Card>
+
+  <Card title="100% Open Source" icon="github">
+    Fully verifiable Rust Soroban smart contracts, TypeScript SDK, Next.js testbench, and Python agent runtime licensed under MIT/Apache 2.0.
+  </Card>
+</CardGrid>

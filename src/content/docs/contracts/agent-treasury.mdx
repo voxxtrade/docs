@@ -1,0 +1,105 @@
+---
+title: Agent Treasury Contract
+description: Comprehensive reference for the AgentTreasury smart contract, including rolling daily spending limits and admin controls.
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+
+The **`AgentTreasury`** contract solves the fundamental security challenge of autonomous AI commerce: **How do you give an AI agent the power to make commercial purchases without giving it the keys to bankrupt your organization?**
+
+Instead of holding private keys with direct custody over customer or merchant treasury funds, the AI agent is only granted restricted calling authority over the `AgentTreasury` contract.
+
+---
+
+## The Rolling 24-Hour Spending Limit
+
+Most smart contracts enforce fixed daily resets (e.g. UTC midnight). This creates vulnerability windows: an attacker could trick an agent into spending its entire daily budget at 23:59:50, and then immediately spend another full daily budget at 00:00:05.
+
+VoxTrade prevents this by calculating rolling time windows directly from Stellar's immutable ledger sequence:
+
+```rust
+// 17,280 ledgers * ~5 seconds per ledger = 86,400 seconds (24 Hours)
+const LEDGERS_PER_DAY: u32 = 17280;
+
+let current_ledger = env.ledger().sequence();
+let current_window = current_ledger / LEDGERS_PER_DAY;
+
+let mut spend_record = Self::get_spend_record(&env, agent);
+if spend_record.window_id != current_window {
+    // New window: reset spent amount to zero
+    spend_record.window_id = current_window;
+    spend_record.amount_spent = 0;
+}
+
+// Ensure transaction doesn't exceed daily cap
+if spend_record.amount_spent + amount > daily_limit {
+    panic_with_error!(&env, TreasuryError::DailyLimitExceeded);
+}
+```
+
+This ensures that regardless of time zones or market volatility, an agent can never spend more than its allowance in any 24-hour cycle.
+
+---
+
+## Contract Methods Reference
+
+### Initialization & Configuration
+
+#### `initialize(merchant: Address, token: Address)`
+Initializes the contract. Can only be invoked once.
+- `merchant`: Admin address with exclusive rights to configure limits, deposit, withdraw, or pause.
+- `token`: Stellar asset address used for transactions (e.g. native XLM contract or USDC).
+
+#### `set_agent(agent: Address, daily_limit: i128)`
+Registers or updates an authorized AI agent address.
+- `agent`: Public key of the AI agent runner.
+- `daily_limit`: Maximum amount (in stroops) the agent can spend per rolling 24-hour period.
+- *Requires `merchant.require_auth()`*.
+
+#### `remove_agent(agent: Address)`
+Revokes all spending authority from an agent immediately.
+- *Requires `merchant.require_auth()`*.
+
+---
+
+### Capital Management
+
+#### `deposit(funder: Address, amount: i128)`
+Transfers tokens into the treasury reserve. Anyone can fund the treasury.
+- *Requires `funder.require_auth()`*.
+
+#### `withdraw(merchant: Address, recipient: Address, amount: i128)`
+Withdraws funds from the treasury reserve to an arbitrary recipient.
+- *Requires `merchant.require_auth()`*.
+
+#### `pause(merchant: Address)` / `unpause(merchant: Address)`
+Emergency circuit-breaker. When paused, all agent spending operations immediately fail.
+- *Requires `merchant.require_auth()`*.
+
+---
+
+### Agent Execution
+
+#### `spend(agent: Address, recipient: Address, amount: i128)`
+Invoked by the authorized AI agent to pay a counterparty or fund an escrow.
+- Verifies contract is not paused.
+- Verifies `agent.require_auth()`.
+- Updates rolling daily spending tally.
+- Emits a `TreasurySpend` event on the Stellar ledger.
+
+---
+
+## Error Codes (`TreasuryError`)
+
+| Error Code | Name | Description |
+| :---: | :--- | :--- |
+| `1` | `AlreadyInitialized` | Attempted to initialize an already configured treasury. |
+| `2` | `NotInitialized` | Contract has not been initialized yet. |
+| `3` | `Unauthorized` | Caller is neither the merchant admin nor an authorized agent. |
+| `4` | `ContractPaused` | The merchant paused the contract; no spending permitted. |
+| `5` | `DailyLimitExceeded` | The requested spend exceeds the agent's rolling 24-hour cap. |
+| `6` | `InsufficientBalance`| Treasury balance is lower than the requested spend amount. |
+
+<Aside type="tip" title="Audit Tip">
+Notice that even if the agent server's private key is completely compromised, an attacker can never drain more than `daily_limit`, and the merchant can revoke the key instantly with `remove_agent()`.
+</Aside>

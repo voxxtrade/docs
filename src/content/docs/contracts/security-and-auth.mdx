@@ -1,0 +1,76 @@
+---
+title: Security & Authorization Hierarchy
+description: Threat analysis, role-based access control, and cryptographic guarantees in VoxTrade.
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Security in automated AI systems cannot rely on good intentions. Autonomous agents make mistakes, network connections drop, and malicious prompt injections attempt to drain liquidity.
+
+VoxTrade enforces security at the protocol and smart contract layer using a **Tripartite Authorization Hierarchy**.
+
+---
+
+## The Tripartite Authorization Hierarchy
+
+Every action in the VoxTrade ecosystem maps to one of three security tiers:
+
+```
+[ Tier 1: Merchant Admin ] ──► Complete Custody, Pause, Revoke, Limits
+           │
+[ Tier 2: Voice AI Agent ]  ──► Bounded Execution, Micro-Escrows, Daily Cap
+           │
+[ Tier 3: Counterparty ]   ──► Claim with Preimage, Refund after Timeout
+```
+
+### 1. Merchant Admin (Highest Authority)
+- Holds cold or multisig wallet custody.
+- Exclusively authorized to initialize treasuries, adjust rolling daily allowances, pause operations, and withdraw unspent reserves.
+- Has the absolute right to instantly sever an AI agent's keys.
+
+### 2. Voice AI Agent (Bounded Authority)
+- Holds an operational hot key.
+- Never has direct token custody; can only invoke `spend()` on `AgentTreasury`.
+- Enforced by hard on-chain mathematical caps (`current_ledger / 17280`). Even in a total server compromise, maximum potential loss is capped to the 24-hour limit.
+
+### 3. Counterparty (Claim / Refund Rights)
+- The customer or supplier participating in the voice negotiation.
+- Can only claim funds by providing the matching cryptographic preimage $R$.
+- If the agent fails to fulfill, the counterparty can always retrieve 100% of their deposit after the timeout ledger.
+
+---
+
+## Threat Model & Mitigations
+
+<CardGrid>
+  <Card title="Prompt Injection" icon="warning">
+    **Threat**: A user tricks the voice AI into saying "I agree to buy your pebble for 100,000 XLM."<br/>
+    **Mitigation**: The `AgentTreasury` rejects any transaction exceeding `daily_limit`. Furthermore, the SDK enforces client-side sanity bounds on per-second rates.
+  </Card>
+
+  <Card title="Preimage Frontrunning" icon="shield">
+    **Threat**: An eavesdropper sees the preimage $R$ in the mempool and attempts to call `claim()` first.<br/>
+    **Mitigation**: `X402Escrow::claim()` requires `claimer.require_auth()`, where `claimer` is strictly validated to match `escrow.recipient`. A third party cannot claim the escrow even with knowledge of $R$.
+  </Card>
+
+  <Card title="Call Dropping / DoS" icon="close">
+    **Threat**: A user hangs up immediately after an escrow is created, leaving funds stuck.<br/>
+    **Mitigation**: The depositor can call `refund()` as soon as `env.ledger().sequence() >= timeout_ledger`. Funds are never permanently trapped.
+  </Card>
+
+  <Card title="Stale Daily Resets" icon="setting">
+    **Threat**: Exploiting midnight boundary clock drift.<br/>
+    **Mitigation**: Stellar ledgers are deterministic and monotonically increasing. `current_ledger / 17280` provides mathematically invariant 24-hour partitions.
+  </Card>
+</CardGrid>
+
+---
+
+## Soroban Invariant Testing
+
+The contract test suite in `voxtrade-contract/contracts/` verifies the following invariants:
+
+1. **Balance Conservation**: The total token balance held by `X402Escrow` always equals the sum of all `Active` escrow amounts.
+2. **Double-Claim Prevention**: Once an escrow transition to `Claimed`, no subsequent claim or refund invocation can succeed under any condition.
+3. **Double-Refund Prevention**: Once an escrow is `Refunded`, funds cannot be claimed or refunded again.
+4. **Admin Sovereign Override**: The merchant admin can always pause the treasury or revoke an agent, preventing any ongoing transactions from clearing.

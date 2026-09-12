@@ -1,0 +1,69 @@
+---
+title: Python Agent Runtime
+description: Lightweight Python runtime for autonomous voice AI agents negotiating on Stellar.
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Located inside the **`voxtrade-contract`** repository under `agent/`, the Python agent runtime provides a lightweight, modular foundation for running autonomous commercial agents in headless environments, server clusters, or IoT edge nodes.
+
+---
+
+## Architecture of the Python Agent
+
+The agent is designed around a decoupled decision-making engine:
+
+```
+[ Audio Ingest / Text Input ]
+              │
+              ▼
+    [ Negotiation Engine ] <──> [ Pricing Constraints (Min/Max Rate) ]
+              │
+              ▼
+    [ HTTP 402 Handler ]   <──> [ SHA-256 Preimage Generator ]
+              │
+              ▼
+    [ Soroban Contract Client (Stellar SDK) ]
+```
+
+---
+
+## Key Modules
+
+### `agent/agent.py`
+The core `VoiceAgent` class handles:
+- **Decision Engine**: Evaluates counterparty bids against configured minimum thresholds (`min_rate`, `target_rate`).
+- **Preimage Secret Management**: Generates secure 32-byte preimages using `os.urandom(32)` and hashes them via `hashlib.sha256()`.
+- **Challenge Creation**: Generates standard HTTP 402 authentication challenge strings:
+  ```python
+  def generate_402_challenge(self, rate: int, escrow_id: int) -> str:
+      preimage = os.urandom(32)
+      hashlock = hashlib.sha256(preimage).hexdigest()
+      self.active_preimages[escrow_id] = preimage
+      return f"X402 escrow_id={escrow_id}, hashlock={hashlock}, rate={rate}"
+  ```
+- **Settlement Verification**: Validates counterparty transactions before streaming subsequent audio data.
+
+---
+
+## Running the Python Test Suite
+
+The Python agent includes a comprehensive unit test suite validating decision logic, 402 challenges, and budget constraints:
+
+```bash
+cd voxtrade-contract
+
+# Run the full agent test suite
+python -m unittest agent/test_agent.py -v
+```
+
+### Test Coverage Highlights
+- `test_rate_negotiation_acceptance`: Tests that valid offers above `min_rate` are accepted.
+- `test_rate_counter_offer`: Tests that offers below `min_rate` trigger a calculated counter-offer.
+- `test_preimage_generation_and_hash`: Verifies that SHA-256 digests accurately match secret preimages.
+- `test_402_challenge_header_format`: Ensures RFC-compliant HTTP 402 challenge strings.
+- `test_budget_cap_enforcement`: Asserts that total spend cannot exceed configured caps.
+
+<Aside type="tip" title="Connecting to Live LLMs">
+The Python runtime includes hook points to integrate directly with OpenAI Realtime API, Google Gemini Live, or open-source local voice models (e.g. Whisper + Llama 3).
+</Aside>

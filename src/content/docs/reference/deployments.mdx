@@ -1,0 +1,68 @@
+---
+title: Live Testnet Deployments
+description: Public contract addresses, WASM hashes, and Stellar Testnet endpoints for VoxTrade.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+VoxTrade smart contracts are deployed and verified on the official **Stellar Testnet**. You can interact with them directly using Soroban CLI, the `@voxtrade/sdk`, or the web testbench.
+
+---
+
+## Contract Deployments
+
+| Contract Name | Contract Address | WASM Hash | Explorer Deep-Link |
+| :--- | :--- | :--- | :--- |
+| **AgentTreasury** | `CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL` | `b9a38f712c4d9e018274ac4839201f84b9c1d0ef93847291a0c8b74619372ef4` | [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL) |
+| **X402Escrow** | `CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE` | `c3c9c996894b9f2d01e40562e8eb66195863c0be83b27b3fa99b19e2e666ce8d` | [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE) |
+
+---
+
+## Stellar Testnet Network Endpoints
+
+Use these public RPC endpoints when configuring your clients:
+
+| Service | URL |
+| :--- | :--- |
+| **Soroban RPC URL** | `https://soroban-testnet.stellar.org` |
+| **Horizon REST API** | `https://horizon-testnet.stellar.org` |
+| **Network Passphrase** | `Test SDF Network ; September 2015` |
+| **Friendbot Faucet** | `https://friendbot.stellar.org` |
+
+---
+
+## Funding a Test Account with Friendbot
+
+You can fund any new Stellar public key with 10,000 testnet XLM for free:
+
+<Tabs>
+  <TabItem label="cURL">
+```bash
+curl "https://friendbot.stellar.org?addr=YOUR_STELLAR_PUBLIC_KEY"
+```
+  </TabItem>
+  <TabItem label="PowerShell">
+```powershell
+Invoke-RestMethod -Uri "https://friendbot.stellar.org?addr=YOUR_STELLAR_PUBLIC_KEY"
+```
+  </TabItem>
+  <TabItem label="JavaScript">
+```javascript
+await fetch(`https://friendbot.stellar.org?addr=${publicKey}`);
+```
+  </TabItem>
+</Tabs>
+
+---
+
+## Verifying Contracts via Stellar CLI
+
+If you have `stellar-cli` installed, you can inspect the contracts on-chain:
+
+```bash
+# Query AgentTreasury contract info
+stellar contract inspect --id CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL --network testnet
+
+# Query X402Escrow contract info
+stellar contract inspect --id CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE --network testnet
+```

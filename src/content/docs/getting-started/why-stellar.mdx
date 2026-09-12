@@ -1,0 +1,65 @@
+---
+title: Why Stellar & Soroban?
+description: Why the VoxTrade voice commerce protocol was architected on Stellar's Soroban smart contract platform.
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Building a protocol that supports **real-time audio micro-payments** and **autonomous AI agents** introduces strict architectural constraints. If transactions take minutes to confirm or cost $2.00 each, voice-streamed commerce simply fails.
+
+Here is why **Stellar** and its **Soroban** WebAssembly (WASM) smart contract platform provide the foundation for VoxTrade.
+
+---
+
+## The Technical Imperatives of Voice Commerce
+
+When two parties negotiate over voice, payments occur in small increments:
+- Paying $0.005 per second of real-time AI audio processing.
+- Locking an escrow of $15.00 for a service that expires in 30 seconds if unanswered.
+- Streaming continuous audio chunks verified by cryptographic preimages.
+
+Here is how different blockchains compare when handling this workload:
+
+| Criteria | Ethereum Mainnet | High-Fee L2s | Solana | **Stellar (Soroban)** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Transaction Fee** | $1.50 – $30.00+ | $0.05 – $0.50 | $0.001 – $0.02 | **under $0.00001 (100 stroops)** |
+| **Settlement Finality** | ~12 minutes | ~1–5 minutes | ~400ms – 2s | **3 – 5 seconds (Deterministic)** |
+| **Fee Predictability** | Unpredictable spikes | Volatile | Congestion spikes | **Extremely stable** |
+| **Execution Sandbox** | EVM (Solidity) | EVM | BPF / Rust | **WASM / Rust (Soroban)** |
+| **Auth Enforcement** | `msg.sender` | `msg.sender` | Ed25519 Signers | **Explicit `require_auth()`** |
+
+---
+
+## 4 Core Pillars of Stellar Soroban for VoxTrade
+
+### 1. Sub-Cent Micro-Transactions
+On Stellar, transaction fees are measured in **stroops** (1 stroop = 0.0000001 XLM). A typical invocation costs around 100 stroops ($0.00001 USD). 
+
+Because fees are infinitesimal, an AI agent can execute dozens of micro-escrow deposits, claims, or rate updates during a single 5-minute phone call without burning through significant capital.
+
+### 2. Deterministic 3–5 Second Ledger Close
+In acoustic conversation, long pauses create terrible user experiences. If a customer says "I accept," and the escrow confirmation takes 2 minutes, the call goes dead.
+
+Stellar’s consensus mechanism closes ledgers every 3 to 5 seconds with absolute mathematical finality. There is no risk of block reorganizations, unconfirmed mempool drops, or probabilistic finality delays.
+
+### 3. Rust-Powered Soroban with Explicit Authorization
+Soroban smart contracts are authored in standard Rust and compiled to compact WebAssembly.
+
+Unlike EVM contracts that rely on implicit `msg.sender` checks, Soroban requires explicit cryptographic authorization:
+```rust
+merchant.require_auth();
+```
+Soroban enforces that the authorized address or smart contract explicitly signed the transaction footprint. This protects against reentrancy attacks, flash loan drains, and signature spoofing.
+
+### 4. Deterministic Ledger Time Tracking
+VoxTrade’s [`AgentTreasury`](/docs/contracts/agent-treasury/) contract enforces rolling 24-hour spending caps. Instead of relying on manipulable block timestamps, Soroban provides direct access to ledger sequence numbers:
+```rust
+let current_window = env.ledger().sequence() / 17280;
+```
+Because Stellar ledgers close at an average of 5 seconds, 17,280 ledgers is approximately 24 hours. This creates a tamper-proof on-chain clock that automatically resets daily allowances without requiring manual cron jobs or centralized keeper bots.
+
+---
+
+## Summary
+
+Stellar is not just a ledger for token transfers; with Soroban, it is a high-speed, verifiable computing engine built for micro-economic interactions. It enables VoxTrade to turn spoken audio into secure, self-enforcing transactions at global scale.

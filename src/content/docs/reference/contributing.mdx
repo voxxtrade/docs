@@ -1,0 +1,78 @@
+---
+title: Open Source & Contributing
+description: How to contribute to the VoxTrade open-source voice commerce ecosystem.
+---
+
+import { Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
+
+VoxTrade is an open-source public goods initiative dedicated to decentralized voice commerce. We welcome contributions from blockchain engineers, frontend developers, AI researchers, and technical writers.
+
+---
+
+## The VoxTrade Organization
+
+The project is maintained under the [**github.com/voxxtrade**](https://github.com/voxxtrade) organization:
+
+- [**`voxtrade-app`**](https://github.com/voxxtrade/voxtrade-app): Next.js web application, WebRTC voice room, real-time visualizers, and TypeScript SDK.
+- [**`voxtrade-contract`**](https://github.com/voxxtrade/voxtrade-contract): Rust Soroban smart contracts (`AgentTreasury`, `X402Escrow`) and Python agent runtime.
+- [**`docs`**](https://github.com/voxxtrade/docs): Official documentation and developer tutorials built with Astro Starlight.
+
+---
+
+## Contributing Workflow
+
+<Steps>
+
+1. **Fork & Clone**
+   Fork the relevant repository to your personal GitHub account and clone it locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/voxtrade-app.git
+   ```
+
+2. **Create a Feature Branch**
+   Always work on a descriptive feature or bugfix branch:
+   ```bash
+   git checkout -b feat/audio-noise-suppression
+   ```
+
+3. **Adhere to Code Standards**
+   - **Frontend / SDK**: Run linter and formatting checks:
+     ```bash
+     pnpm lint
+     pnpm build
+     ```
+   - **Soroban Smart Contracts**: Run formatters and tests:
+     ```bash
+     cargo fmt --all -- --check
+     cargo clippy --all-targets -- -D warnings
+     cargo test
+     ```
+   - **Documentation**: Verify documentation builds cleanly:
+     ```bash
+     pnpm build
+     ```
+
+4. **Commit Guidelines**
+   We use conventional commit messages:
+   - `feat: add noise suppression filter to audio processor`
+   - `fix: correct rolling ledger calculation in agent treasury`
+   - `docs: add sequence diagram for agent-to-agent negotiation`
+
+5. **Submit a Pull Request**
+   Push your branch and open a PR against `main`. Ensure all automated GitHub Actions CI checks pass green.
+
+</Steps>
+
+---
+
+## Reporting Issues & Security Disclosures
+
+If you discover a bug or want to request a new feature, open an issue on the relevant GitHub repository.
+
+For security-sensitive vulnerabilities in the smart contracts, please contact the core maintainers directly or open a draft security advisory on GitHub rather than posting a public issue.
+
+---
+
+## License
+
+All core repositories in the VoxTrade ecosystem are licensed under the **MIT License** and/or **Apache 2.0 License**, ensuring complete freedom for community use, commercial integration, and research.

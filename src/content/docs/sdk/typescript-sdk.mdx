@@ -1,0 +1,127 @@
+---
+title: TypeScript SDK Guide
+description: Build voice-enabled commerce applications using the official @voxtrade/sdk.
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+The **`@voxtrade/sdk`** provides a strongly-typed TypeScript library for interacting with VoxTrade smart contracts, handling WebRTC audio streams, and processing HTTP 402 challenges in web or Node.js environments.
+
+---
+
+## Installation
+
+Install the package alongside the official Stellar SDK:
+
+<Tabs>
+  <TabItem label="pnpm">
+```bash
+pnpm add @voxtrade/sdk @stellar/stellar-sdk
+```
+  </TabItem>
+  <TabItem label="npm">
+```bash
+npm install @voxtrade/sdk @stellar/stellar-sdk
+```
+  </TabItem>
+  <TabItem label="yarn">
+```bash
+yarn add @voxtrade/sdk @stellar/stellar-sdk
+```
+  </TabItem>
+</Tabs>
+
+---
+
+## Initializing the Client
+
+```typescript
+import { VoxTradeClient, CallingMode } from '@voxtrade/sdk';
+
+const client = new VoxTradeClient({
+  network: 'testnet',
+  rpcUrl: 'https://soroban-testnet.stellar.org',
+  treasuryContractId: 'CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL',
+  escrowContractId: 'CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE',
+});
+```
+
+---
+
+## Initiating a Voice Session
+
+```typescript
+// Start a voice negotiation session with an AI Merchant
+const session = await client.createVoiceSession({
+  mode: CallingMode.USER_TO_AGENT,
+  targetAgent: 'CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL',
+  maxRatePerSecondStroops: 500000n, // Max willingness to pay (0.05 XLM/sec)
+});
+
+// Listen for live audio spectrum & speech telemetry
+session.on('telemetry', (data) => {
+  console.log('Audio Frequency Bands:', data.frequencyBands);
+  console.log('Mic Input Volume (dB):', data.volumeDb);
+});
+
+// Listen for live streaming transcription
+session.on('transcript', (entry) => {
+  console.log(`[${entry.speaker}] ${entry.text}`);
+});
+
+// Triggered when both parties reach commercial agreement
+session.on('agreement_reached', async (agreement) => {
+  console.log('Agreement reached:', agreement.summary);
+  console.log('Total Price:', agreement.totalStroops);
+
+  // Lock the escrow on Stellar Soroban
+  const escrowId = await session.lockEscrow();
+  console.log('Escrow locked on-chain with ID:', escrowId);
+});
+```
+
+---
+
+## Exporting Session Transcripts
+
+At any point or after call completion, you can export the full structured transcript:
+
+```typescript
+// Export as structured JSON object
+const transcriptData = session.exportTranscript();
+
+// Or generate a downloadable Blob in the browser
+const jsonString = JSON.stringify(transcriptData, null, 2);
+const blob = new Blob([jsonString], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+
+const a = document.createElement('a');
+a.href = url;
+a.download = `voxtrade-transcript-${session.id}.json`;
+a.click();
+```
+
+---
+
+## Interacting Directly with Smart Contracts
+
+If you only need to interact with the underlying Soroban contracts without the voice layer:
+
+```typescript
+import { SorobanEscrowClient } from '@voxtrade/sdk';
+
+const escrowClient = new SorobanEscrowClient({
+  contractId: 'CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE',
+  rpcUrl: 'https://soroban-testnet.stellar.org',
+});
+
+// Query on-chain escrow state
+const escrow = await escrowClient.getEscrow(42n);
+console.log('Escrow Status:', escrow.status); // 'Active' | 'Claimed' | 'Refunded'
+console.log('Recipient:', escrow.recipient);
+console.log('Timeout Ledger:', escrow.timeoutLedger);
+```
+
+<Aside type="tip" title="Wallet Integration">
+`@voxtrade/sdk` integrates seamlessly with Freighter, Albedo, and standard Stellar `@stellar/stellar-wallets-kit` connectors.
+</Aside>

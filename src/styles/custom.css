@@ -1,0 +1,43 @@
+:root {
+	--sl-color-accent-low: #064e3b;
+	--sl-color-accent: #10b981;
+	--sl-color-accent-high: #a7f3d0;
+	--sl-color-white: #f8fafc;
+	--sl-color-gray-1: #e2e8f0;
+	--sl-color-gray-2: #94a3b8;
+	--sl-color-gray-3: #64748b;
+	--sl-color-gray-4: #334155;
+	--sl-color-gray-5: #1e293b;
+	--sl-color-gray-6: #0f172a;
+	--sl-color-black: #080c14;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #d1fae5;
+	--sl-color-accent: #059669;
+	--sl-color-accent-high: #064e3b;
+}
+
+/* Custom glow on hero and cards */
+.card {
+	border-color: rgba(16, 185, 129, 0.15) !important;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+	border-color: rgba(16, 185, 129, 0.4) !important;
+	box-shadow: 0 4px 20px -4px rgba(16, 185, 129, 0.12);
+}
+
+/* Stellar callout badge */
+.stellar-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.2rem 0.6rem;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	background: rgba(6, 182, 212, 0.12);
+	color: #06b6d4;
+	border: 1px solid rgba(6, 182, 212, 0.3);
+}

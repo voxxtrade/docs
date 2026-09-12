@@ -1,0 +1,117 @@
+---
+title: Quickstart Guide
+description: Get VoxTrade running locally on your machine in under five minutes.
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+This guide will walk you through setting up both the **Web Application & Interactive Voice Testbench** and exploring the **Soroban Smart Contracts**.
+
+---
+
+## Prerequisites
+
+Before starting, ensure you have the following installed on your machine:
+
+- **Node.js**: v18.0.0 or higher (v20+ recommended)
+- **pnpm**: v9.0.0 or higher (`corepack enable && corepack prepare pnpm@latest --activate`)
+- **Rust & Cargo**: (Only if compiling smart contracts locally) `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- **Freighter Wallet**: [Browser Extension](https://www.freighter.app/) set to **Testnet** (Optional, for live signing)
+
+---
+
+## Step 1: Clone the Repositories
+
+VoxTrade is split into two primary codebases: `voxtrade-app` (frontend + SDK) and `voxtrade-contract` (smart contracts + agent).
+
+<Tabs>
+  <TabItem label="App & SDK">
+```bash
+git clone https://github.com/voxxtrade/voxtrade-app.git
+cd voxtrade-app
+```
+  </TabItem>
+  <TabItem label="Smart Contracts">
+```bash
+git clone https://github.com/voxxtrade/voxtrade-contract.git
+cd voxtrade-contract
+```
+  </TabItem>
+</Tabs>
+
+---
+
+## Step 2: Running the Web App & Voice Testbench
+
+The `voxtrade-app` repository contains the Next.js frontend, interactive WebRTC voice room, real-time audio visualizers, and simulated agent channels.
+
+<Steps>
+
+1. **Install Dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+2. **Configure Environment Variables**:
+   Copy the example environment file:
+   ```bash
+   cp apps/web/.env.example apps/web/.env.local
+   ```
+
+   The default values point directly to the live Stellar Testnet contracts deployed for VoxTrade:
+   ```ini
+   NEXT_PUBLIC_STELLAR_NETWORK=testnet
+   NEXT_PUBLIC_HORIZON_URL=https://horizon-testnet.stellar.org
+   NEXT_PUBLIC_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+   NEXT_PUBLIC_TREASURY_CONTRACT_ID=CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL
+   NEXT_PUBLIC_ESCROW_CONTRACT_ID=CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE
+   ```
+
+3. **Start the Development Server**:
+   ```bash
+   pnpm dev
+   ```
+
+4. **Open in Your Browser**:
+   Navigate to [http://localhost:3000](http://localhost:3000) to see the VoxTrade landing page, or jump directly to [http://localhost:3000/app](http://localhost:3000/app) to launch the voice negotiation testbench.
+
+</Steps>
+
+---
+
+## Step 3: Testing Voice Negotiation in the Browser
+
+When you open `/app`, you can test all 3 calling modes right away:
+
+1. **Grant Microphone Access**: Click the microphone icon or **"Start Voice Session"**. The app requests standard browser audio permissions.
+2. **Watch the Audio Waveform**: Speak into your mic! The real-time frequency visualizer reacts dynamically to your voice volume and tone.
+3. **Select a Mode**:
+   - **User ↔ Agent**: Try negotiating a price for a consultation or product order.
+   - **Agent ↔ Agent**: Watch two simulated agents negotiate terms autonomously.
+   - **User ↔ User**: Simulate a call between two people with automated AI contract generation.
+4. **Inspect the Live Transcript & Contract**: As you speak, the live transcript logs each statement. Once an agreement is reached, click **"Download Transcript (.json)"** or review the generated smart contract proposal!
+
+---
+
+## Step 4: Running Smart Contract Unit Tests
+
+If you want to inspect or test the Soroban contracts in `voxtrade-contract`:
+
+```bash
+cd voxtrade-contract
+
+# Run the 24 Soroban smart contract tests
+cargo test
+
+# Run the Python agent runtime test suite
+python -m unittest agent/test_agent.py
+```
+
+All 24 smart contract tests and 11 agent tests will execute in seconds, verifying:
+- Daily rolling spend limits in `AgentTreasury`.
+- Hashlock escrow lock, claims, and automated timeouts in `X402Escrow`.
+- HTTP 402 challenge parsing and agent decision making.
+
+<Aside type="note" title="Need Testnet XLM?">
+Check out the [Testnet Faucet & Testing Guide](/docs/reference/deployments/) to fund your test account using Stellar Friendbot with 10,000 free testnet XLM.
+</Aside>

@@ -1,0 +1,69 @@
+---
+title: Soroban Contract Architecture
+description: Overview of the VoxTrade smart contract suite deployed on Stellar Soroban.
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+The VoxTrade smart contract ecosystem is authored in **Rust** using the **Soroban SDK**. It is designed with strict separation of concerns between agent capital management and transaction escrow settlement.
+
+---
+
+## The Contract Pair
+
+```
+                   ┌─────────────────────────────┐
+                   │    Merchant Admin Wallet    │
+                   └──────────────┬──────────────┘
+                                  │ Configures budgets & rules
+                                  ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    AgentTreasury Contract                    │
+│  - Stores merchant working capital                           │
+│  - Enforces 24-hour rolling spending allowance               │
+│  - Grants authorized AI agent calling permissions            │
+│  - Emergency pause / fund reclamation                        │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ Disburses micro-payments
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                     X402Escrow Contract                      │
+│  - Holds locked escrow funds during voice call               │
+│  - Verifies cryptographic SHA-256 preimages                  │
+│  - Releases funds upon successful audio delivery             │
+│  - Automated ledger timeout refunds                          │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Live Stellar Testnet Deployments
+
+Both contracts are compiled to WebAssembly (WASM) and deployed on the **Stellar Testnet**:
+
+| Contract | Address | WASM Hash | Explorer Link |
+| :--- | :--- | :--- | :--- |
+| **AgentTreasury** | `CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL` | `b9a38f712c4d9e...` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL) |
+| **X402Escrow** | `CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE` | `c3c9c996894b9f...` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE) |
+
+---
+
+## Storage Model & Soroban TTL (Time-to-Live)
+
+Soroban uses state archival and rent mechanics. In VoxTrade:
+- **Instance Storage**: Stores permanent configuration data (merchant admin address, agent public key, daily limit configuration). Automatically bumped with `env.storage().instance().extend_ttl(...)`.
+- **Temporary / Persistent Storage**: Used for individual escrows in `X402Escrow`. Once an escrow is claimed or refunded, its storage key can be reclaimed to keep state bloat minimal.
+
+---
+
+## Contract Standards & Tooling
+
+The contracts follow official Stellar development standards:
+- **Soroban SDK**: v22+
+- **Rust Toolchain**: 1.80+ with `wasm32-unknown-unknown` target
+- **Testing**: Native in-memory Soroban test environment (`Env::default()`)
+- **Deterministic Testing**: Mock ledger sequencing and time dilation testing
+
+<Aside type="tip" title="Deep Dive into Each Contract">
+Explore the dedicated guides for [Agent Treasury](/docs/contracts/agent-treasury/) and [X402 Escrow](/docs/contracts/x402-escrow/).
+</Aside>

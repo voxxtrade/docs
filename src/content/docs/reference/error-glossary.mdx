@@ -1,0 +1,51 @@
+---
+title: Error Code Glossary
+description: Comprehensive directory of all error codes across the VoxTrade smart contracts and SDK.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+When a transaction or smart contract invocation fails, Soroban returns a typed numeric error code. Use this glossary to identify the cause and remedy.
+
+---
+
+## AgentTreasury Error Codes
+
+Errors emitted by [`AgentTreasury`](/docs/contracts/agent-treasury/) (`contracts/agent_treasury/src/lib.rs`):
+
+| Code | Identifier | Explanation | Resolution |
+| :---: | :--- | :--- | :--- |
+| **`1`** | `AlreadyInitialized` | Contract has already been initialized with a merchant admin and token. | Do not re-invoke `initialize()`. |
+| **`2`** | `NotInitialized` | Contract state is empty. | Merchant must call `initialize()` before depositing or spending. |
+| **`3`** | `Unauthorized` | Caller address does not have permission for the requested action. | Ensure the merchant admin signed the tx, or caller is a registered agent. |
+| **`4`** | `ContractPaused` | Merchant triggered the emergency circuit-breaker (`pause`). | Call `unpause()` from the merchant admin wallet to resume operations. |
+| **`5`** | `DailyLimitExceeded` | The requested spend exceeds the agent's rolling 24-hour limit. | Wait for the rolling ledger window to progress, or increase limit with `set_agent()`. |
+| **`6`** | `InsufficientBalance`| Treasury balance is less than the requested spend amount. | Merchant or funder must invoke `deposit()` with additional tokens. |
+
+---
+
+## X402Escrow Error Codes
+
+Errors emitted by [`X402Escrow`](/docs/contracts/x402-escrow/) (`contracts/x402_escrow/src/lib.rs`):
+
+| Code | Identifier | Explanation | Resolution |
+| :---: | :--- | :--- | :--- |
+| **`1`** | `EscrowNotFound` | No escrow matching the specified `escrow_id` exists. | Check `create_escrow` return value; verify ID. |
+| **`2`** | `EscrowNotActive` | Escrow has already been claimed or refunded. | Each escrow ID can only be settled once. |
+| **`3`** | `InvalidPreimage` | `SHA-256(R) != hashlock` | Ensure the provided secret preimage `R` corresponds to the agreed hashlock. |
+| **`4`** | `TimeoutNotReached` | `refund()` called before `timeout_ledger`. | Wait until Stellar ledger sequence reaches `timeout_ledger` before refunding. |
+| **`5`** | `TimeoutExpired` | `claim()` called after `timeout_ledger` has elapsed. | Claims must be executed before the agreed timeout ledger. |
+| **`6`** | `Unauthorized` | Caller is not the designated recipient (for claim) or depositor (for refund). | Check wallet address executing the call. |
+| **`7`** | `InvalidAmount` | Escrow amount is zero or negative. | Escrow amount must be strictly greater than zero. |
+| **`8`** | `InvalidTimeout` | `timeout_ledger` is less than or equal to current ledger. | Specify a future ledger sequence (typically current ledger + 720 to 17280). |
+
+---
+
+## SDK Client Errors
+
+Common client-side errors thrown by `@voxtrade/sdk`:
+
+- **`ERR_MIC_PERMISSION_DENIED`**: User denied microphone access in the browser.
+- **`ERR_AUDIO_STREAM_DISCONNECTED`**: WebRTC audio track was abruptly muted or closed.
+- **`ERR_FREIGHTER_NOT_FOUND`**: Freighter browser extension is not installed or enabled.
+- **`ERR_HORIZON_RPC_TIMEOUT`**: Stellar testnet RPC node did not respond within 15 seconds.

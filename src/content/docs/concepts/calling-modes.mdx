@@ -1,0 +1,104 @@
+---
+title: The Three Calling Modes
+description: Explore the three acoustic negotiation architectures supported by the VoxTrade protocol.
+---
+
+import { Card, CardGrid, Steps, Aside } from '@astrojs/starlight/components';
+
+Not every voice transaction is the same. Sometimes a customer calls an automated merchant AI to place an order; other times, two AI agents negotiate wholesale inventory supply lines; and in many cases, two human business partners negotiate an agreement while an AI acts as a neutral legal scribe and escrow custodian.
+
+To serve all these scenarios, VoxTrade implements **Three Distinct Calling Modes**.
+
+---
+
+## 1. User ↔ Agent (Human to AI Merchant)
+
+```
+[ Human User (Mic / Speaker) ]
+              │   ▲
+  Voice Audio │   │ Audio Stream + 402 Challenge
+              ▼   │
+[ VoxTrade Merchant Agent ] ──> [ AgentTreasury Contract (Stellar) ]
+```
+
+### How It Works
+A human user initiates a call with an AI-powered merchant or service provider. The user speaks naturally, asking about pricing, delivery windows, or consultation advice.
+
+The merchant agent evaluates the user's intent, answers questions dynamically, and responds with a commercial quote. If the user agrees ("Sounds good, let's do it"), the agent creates an escrow demand and prompts the user's connected wallet (e.g. Freighter) for signature.
+
+### Real-World Use Cases
+- **On-Demand Expert Consulting**: Pay $0.05/minute for instant technical or financial advice from specialized AI models.
+- **Drive-Thru / Ordering Kiosks**: Natural language voice ordering with instant cryptographic payment verification.
+- **Micro-Task Services**: Requesting custom data synthesis, audio translation, or research summaries over voice.
+
+---
+
+## 2. Agent ↔ Agent (Autonomous Bilateral Negotiation)
+
+```
+[ Buyer Agent (Prompt + Treasury) ]
+              │   ▲
+  Audio Stream│   │ Audio Stream
+              ▼   │
+[ Seller Agent (Inventory + Pricing Matrix) ]
+              │
+              ▼
+[ X402Escrow Contract (Stellar Soroban) ]
+```
+
+### How It Works
+Both sides of the call are autonomous AI agents. One agent represents a buyer with a budget and requirements (configured via `AgentTreasury`); the other represents a seller with inventory, minimum viable rates, and scheduling constraints.
+
+The agents negotiate over simulated acoustic audio channels. They test each other's boundaries, counter-offer, and converge on an optimal market clearing price without human intervention. Once consensus is reached, the buyer agent locks the escrow on Stellar.
+
+### Real-World Use Cases
+- **Automated Cloud Compute Arbitrage**: Agents buying and selling GPU cluster minutes based on live network demand.
+- **Supply Chain Fulfillment**: Autonomous procurement bots negotiating freight delivery schedules with shipping fleet dispatchers.
+- **Decentralized Liquidity Routing**: Agents balancing cross-border remittance corridors through dynamic spot quotes.
+
+---
+
+## 3. User ↔ User (Human to Human with AI Scribe & Escrow)
+
+```
+[ Human Buyer ]  <══════ Audio Call ══════>  [ Human Seller ]
+       │                                           │
+       └────────────┐                 ┌────────────┘
+                    ▼                 ▼
+             [ VoxTrade AI Synthesis Scribe ]
+                            │
+               Extracts Terms & Milestone Locks
+                            ▼
+             [ X402Escrow Contract (Stellar) ]
+```
+
+### How It Works
+Two humans conduct a phone or WebRTC call directly. Both parties give consent for the VoxTrade AI Scribe to listen in. 
+
+As the conversation unfolds, the AI:
+1. Filters conversational pleasantries and highlights commercial agreements ("I'll deliver the 3D assets by Friday for 500 XLM").
+2. Generates an instant, structured **Commercial Agreement Contract** on screen.
+3. Automatically computes the SHA-256 escrow conditions.
+4. Provides both parties with a one-click button to deposit funds and seal the deal on Stellar Soroban.
+5. Saves the timestamped transcript and allows both parties to download the auditable JSON log.
+
+### Real-World Use Cases
+- **Freelance Gig Deals**: Two people agreeing on design, writing, or development milestones without paying 20% platform fees.
+- **P2P Marketplace Goods**: Buying or selling physical items locally or internationally with milestone-based escrow.
+- **Legal & Contract Drafting**: Turning spoken verbal commitments into legally binding, auditable on-chain commitments.
+
+---
+
+## Mode Comparison
+
+| Feature | User ↔ Agent | Agent ↔ Agent | User ↔ User |
+| :--- | :--- | :--- | :--- |
+| **Human In the Loop** | Yes (Client) | No (Pure AI) | Yes (Both Parties) |
+| **AI Role** | Merchant / Seller | Buyer & Seller | Neutral Scribe & Escrow Manager |
+| **Escrow Trigger** | User confirms voice quote | Autonomous algorithmic agreement | Mutual one-click wallet signature |
+| **Audio Stream** | WebRTC to Agent Node | Virtual Audio / Token Stream | Peer-to-Peer WebRTC Audio |
+| **Transcript Download** | Yes (Client audit) | Yes (Machine log) | Yes (Signed bilateral record) |
+
+<Aside type="tip" title="Test It Live">
+You can test all three calling modes right now in the web testbench at [`http://localhost:3000/app`](http://localhost:3000/app).
+</Aside>

@@ -1,0 +1,118 @@
+---
+title: AI Synthesis & Transcripts
+description: How spoken dialogue is transcribed, parsed into binding contract drafts, and exported as auditable transcripts.
+---
+
+import { Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
+
+One of the most powerful features of VoxTrade is that **no spoken commitment is lost**. 
+
+Whether two human founders are negotiating a partnership in **User ↔ User** mode or a buyer is ordering inventory in **User ↔ Agent** mode, the protocol continuously logs, analyzes, and synthesizes the conversation into structured deliverables.
+
+---
+
+## The AI Synthesis Pipeline
+
+```
+[ Raw Audio Stream ] ──> [ Live Speech-to-Text ] ──> [ Timestamped Transcript Log ]
+                                                                │
+[ On-Chain Soroban Escrow ] <── [ Structured Agreement ] <──────┘
+```
+
+<Steps>
+
+1. **Continuous Audio Logging**
+   As audio chunks are streamed, the speech recognition engine generates real-time transcripts with millisecond-precision timestamps:
+   ```json
+   {
+     "id": "utt_01",
+     "speaker": "buyer",
+     "timestamp": "00:01:24.400",
+     "text": "Can you review our smart contract for 120 XLM by Thursday?"
+   }
+   ```
+
+2. **Semantic Agreement Extraction**
+   When speakers reach consensus, the synthesis agent evaluates the entire conversation context to extract key commercial variables:
+   - **Scope of Work**: Specific deliverables agreed upon.
+   - **Counterparties**: Buyer address and Seller address.
+   - **Total Consideration**: Escrow amount in XLM or USDC.
+   - **Milestones**: Incremental checkpoints (e.g., 50% upon draft, 50% upon final delivery).
+   - **Dispute & Timeout Windows**: Stellar ledger expiration height.
+
+3. **Contract Draft Generation**
+   The synthesis engine outputs a human-readable legal summary displayed right on the call screen:
+   ```markdown
+   # COMMERCIAL SERVICE AGREEMENT
+   - Date: 2026-09-12
+   - Buyer: GAB...7X2
+   - Seller: GCY...9M4
+   - Deliverable: Rust Soroban Smart Contract Security Review
+   - Agreed Compensation: 120.0000000 XLM
+   - Expiration Ledger: 104,200 (~24 hours)
+   - Settlement Hashlock: 0x7f83b165...
+   ```
+
+4. **Transcript Export & Download**
+   Both counterparties can immediately click **"Download Transcript (.json)"** to store an encrypted, timestamped archive of the call for their records.
+
+</Steps>
+
+---
+
+## Transcript Schema Specification
+
+The downloaded transcript is formatted as a structured JSON object containing metadata, speaker entries, and contract hashes:
+
+```json
+{
+  "sessionId": "vox_sess_9a82b4c1",
+  "startedAt": "2026-09-12T10:45:00Z",
+  "endedAt": "2026-09-12T10:52:18Z",
+  "durationSeconds": 438,
+  "callingMode": "USER_TO_AGENT",
+  "participants": {
+    "initiator": "GAB...7X2",
+    "counterparty": "CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL"
+  },
+  "transcript": [
+    {
+      "index": 0,
+      "speaker": "initiator",
+      "timestamp": "00:00:04",
+      "text": "Hello, I want to check rates for the automated trading bot."
+    },
+    {
+      "index": 1,
+      "speaker": "counterparty",
+      "timestamp": "00:00:07",
+      "text": "Welcome to VoxTrade. Current hourly streaming rate is 15 XLM."
+    }
+  ],
+  "contractSummary": {
+    "deliverable": "Automated Trading Bot Execution (1 Hour)",
+    "agreedRate": "15.0000000 XLM",
+    "escrowId": 894,
+    "escrowAddress": "CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE",
+    "transcriptHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
+```
+
+---
+
+## Verification & Non-Repudiation
+
+How do we prove that a transcript matches the on-chain escrow?
+
+1. The entire JSON transcript is serialized into canonical JSON (RFC 8785).
+2. The SHA-256 hash of the canonical transcript is computed:
+   ```
+   transcriptHash = SHA-256(CanonicalTranscript)
+   ```
+3. This hash is embedded into the Soroban escrow memo or contract storage upon creation.
+4. Anyone can verify the transcript was not tampered with by hashing the downloaded JSON file and comparing it against the on-chain transaction footprint on Stellar Expert.
+
+<Aside type="tip" title="Privacy Preservation">
+Transcripts are kept strictly on the client side or in temporary ephemeral session memory unless explicitly saved by the participants. No conversation logs are sold or sent to third-party ad networks.
+</Aside>
